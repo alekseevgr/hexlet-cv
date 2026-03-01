@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -60,17 +61,15 @@ public class RegistrationControllerTest {
 
         userRepository.deleteAll();
 
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac).defaultResponseCharacterEncoding(StandardCharsets.UTF_8)
-                .apply(springSecurity()).build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(wac)
+                .defaultResponseCharacterEncoding(StandardCharsets.UTF_8)
+                .apply(springSecurity())
+                .build();
     }
 
     @Test
     public void testCreateUser() throws Exception {
-        var data = new RegistrationRequestDTO();
-        data.setEmail("test@gmail.com");
-        data.setPassword("test_password");
-        data.setFirstName("firstName");
-        data.setLastName("lastName");
+        var data = createValidDto();
 
         var request = post("/users").contentType(MediaType.APPLICATION_JSON)
                 .content(om.writeValueAsString(data));
@@ -86,34 +85,26 @@ public class RegistrationControllerTest {
 
     @Test
     public void testDisposableEmail() throws Exception {
-        var data = new RegistrationRequestDTO();
+        var data = createValidDto();
         data.setEmail("test@sharklasers.com");
-        data.setPassword("test_pass_123");
-        data.setFirstName("firstName");
-        data.setLastName("lastName");
 
         var request = post("/users").contentType(MediaType.APPLICATION_JSON)
                 .content(om.writeValueAsString(data));
 
-        mockMvc.perform(request).andExpect(status().isUnprocessableEntity())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-                // проверка сообщения требует локализации
-                //.andExpect(jsonPath("$.errors.email")
-                        //.value("Запрещено использовать одноразовые email"));
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(data)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.errors.email").exists());
     }
 
     @Test
     public void testEmailPresentInDB() throws Exception {
-        var data = new RegistrationRequestDTO();
-        data.setEmail("test@gmail.com");
-        data.setPassword("test_password123");
-        data.setFirstName("firstName");
-        data.setLastName("lastName");
-
+        var data = createValidDto();
         var newUserData = registrationMapper.map(data);
         newUserData.setEncryptedPassword("123456");
         newUserData.setRole(RoleType.CANDIDATE);
-
         userRepository.save(newUserData);
 
         var request = post("/users").contentType(MediaType.APPLICATION_JSON)
@@ -129,38 +120,34 @@ public class RegistrationControllerTest {
 
     @Test
     public void testNonExistentEmail() throws Exception {
-        var data = new RegistrationRequestDTO();
+        var data = createValidDto();
         data.setEmail("test@goopmal.com");
-        data.setPassword("test_pass_123");
-        data.setFirstName("firstName");
-        data.setLastName("lastName");
 
         var request = post("/users").contentType(MediaType.APPLICATION_JSON)
                 .content(om.writeValueAsString(data));
 
-        mockMvc.perform(request).andExpect(status().isUnprocessableEntity())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-                // проверка сообщения требует локализации
-                //.andExpect(jsonPath("$.errors.email")
-                        //.value("Домен в email не существует"));
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(data)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.errors.email").exists());
     }
 
     @Test
     public void testNotCorrectEmail() throws Exception {
-        var data = new RegistrationRequestDTO();
+        var data = createValidDto();
         data.setEmail("testgmail.com");
-        data.setPassword("test_pass_123");
-        data.setFirstName("firstName");
-        data.setLastName("lastName");
 
         var request = post("/users").contentType(MediaType.APPLICATION_JSON)
                 .content(om.writeValueAsString(data));
 
-        mockMvc.perform(request).andExpect(status().isUnprocessableEntity())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-                // проверка сообщения требует локализации
-                //.andExpect(jsonPath("$.errors.email")
-                        //.value("Укажите корректный email-адрес"));
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(data)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.errors.email").exists());
     }
     // email с односимвольным TLD ------------
     // проверять нет смысла потому что валидация через запрос в
@@ -188,67 +175,43 @@ public class RegistrationControllerTest {
 
     @Test
     public void testNotValidShortPassword() throws Exception {
-        var data = new RegistrationRequestDTO();
-        data.setEmail("test@gmail.com");
+        var data = createValidDto();
         data.setPassword("test_p");
-        data.setFirstName("firstName");
-        data.setLastName("lastName");
 
-        var request = post("/users").contentType(MediaType.APPLICATION_JSON)
-                .content(om.writeValueAsString(data));
-
-        mockMvc.perform(request).andExpect(status().isUnprocessableEntity())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-                // проверка сообщения требует локализации
-                //.andExpect(jsonPath("$.errors.password")
-                        //.value("Пароль должен быть не менее 8 символов"));
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(data)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.errors.password").exists());
     }
 
     @Test
     public void testSimplePassword() throws Exception {
+        var data = createValidDto();
         // имя совпадает
-        var data = new RegistrationRequestDTO();
-        data.setEmail("test@gmail.com");
         data.setPassword("firstName");
-        data.setFirstName("firstName");
-        data.setLastName("lastName");
-
-        var request = post("/users").contentType(MediaType.APPLICATION_JSON)
-                .content(om.writeValueAsString(data));
-
-        mockMvc.perform(request).andExpect(status().isUnprocessableEntity())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-                // проверка сообщения требует локализации
-                //.andExpect(jsonPath("$.errors.password")
-                        //.value("Пароль слишком простой — не должен совпадать с email или именем"));
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(data)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errors.password").exists());
 
         // фамилия совпадает
-        data.setEmail("test@gmail.com");
         data.setPassword("lastName");
-        data.setFirstName("firstName");
-        data.setLastName("lastName");
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(data)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errors.password").exists());
 
-        request = post("/users").contentType(MediaType.APPLICATION_JSON)
-                .content(om.writeValueAsString(data));
-
-        mockMvc.perform(request).andExpect(status().isUnprocessableEntity())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-                // проверка сообщения требует локализации
-                //.andExpect(jsonPath("$.errors.password")
-                        //.value("Пароль слишком простой — не должен совпадать с email или именем"));
         // email совпадает
-        data.setEmail("test@gmail.com");
         data.setPassword("test@gmail.com");
-        data.setFirstName("firstName");
-        data.setLastName("lastName");
-
-        request = post("/users").contentType(MediaType.APPLICATION_JSON)
-                .content(om.writeValueAsString(data));
-
-        mockMvc.perform(request).andExpect(status().isUnprocessableEntity())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-                //.andExpect(jsonPath("$.errors.password")
-                        //.value("Пароль слишком простой — не должен совпадать с email или именем"));
+        mockMvc.perform(post("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(data)))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errors.password").exists());
     }
 
 // Inertia тесты ---------
@@ -266,36 +229,26 @@ public class RegistrationControllerTest {
 
         userRepository.save(existing);
 
-        var dto = new RegistrationRequestDTO();
+        var dto = createValidDto();
         dto.setEmail("test@google.com");
-        dto.setPassword("1234qwery");
-        dto.setFirstName("testFirstName");
-        dto.setLastName("testLastName");
 
-        //  POST
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(om.writeValueAsString(dto))
                         .header("X-Inertia", "true")
                         .header("Referer", "/users/sign_up"))
                 .andExpect(status().isSeeOther())
-                // что у нас редирект на этот путь идет
                 .andExpect(header().string("Location", "/users/sign_up"))
-                // и что во флэш атрибутах должна приходить ошибка по дублированию email - значить флэши проходят
                 .andExpect(flash().attributeExists("errors"))
-                .andExpect(flash().attribute("errors", hasKey("email")))
-                .andReturn();
+                .andExpect(flash().attribute("errors", hasKey("email")));
     }
 
 
     @Test
     void testInertiaSimplePassword() throws Exception {
         // имя совпадает
-        var dto = new RegistrationRequestDTO();
-        dto.setEmail("test@gmail.com");
+        var dto = createValidDto();
         dto.setPassword("firstName");
-        dto.setFirstName("firstName");
-        dto.setLastName("lastName");
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -304,20 +257,14 @@ public class RegistrationControllerTest {
                         .header("Referer", "/users/sign_up"))
                 .andExpect(status().isSeeOther())
                 .andExpect(header().string("Location", "/users/sign_up"))
-                // и что во флэш атрибутах должна приходить ошибка по дублированию
-                // password - значить флэши проходят
                 .andExpect(flash().attributeExists("errors"))
-                .andExpect(flash().attribute("errors", hasKey("password")))
-                .andReturn();
+                .andExpect(flash().attribute("errors", hasKey("password")));
     }
 
     @Test
     void testInertiaNotValidShortPassword() throws Exception {
-        var dto = new RegistrationRequestDTO();
-        dto.setEmail("test@gmail.com");
+        var dto = createValidDto();
         dto.setPassword("test_p");
-        dto.setFirstName("firstName");
-        dto.setLastName("lastName");
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -327,17 +274,13 @@ public class RegistrationControllerTest {
                 .andExpect(status().isSeeOther())
                 .andExpect(header().string("Location", "/users/sign_up"))
                 .andExpect(flash().attributeExists("errors"))
-                .andExpect(flash().attribute("errors", hasKey("password")))
-                .andReturn();
+                .andExpect(flash().attribute("errors", hasKey("password")));
     }
 
     @Test
     void testInertiaNotCorrectEmail() throws Exception {
-        var dto = new RegistrationRequestDTO();
+        var dto = createValidDto();
         dto.setEmail("testgmail.com");
-        dto.setPassword("test_pass_123");
-        dto.setFirstName("firstName");
-        dto.setLastName("lastName");
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -347,17 +290,13 @@ public class RegistrationControllerTest {
                 .andExpect(status().isSeeOther())
                 .andExpect(header().string("Location", "/users/sign_up"))
                 .andExpect(flash().attributeExists("errors"))
-                .andExpect(flash().attribute("errors", hasKey("email")))
-                .andReturn();
+                .andExpect(flash().attribute("errors", hasKey("email")));
     }
 
     @Test
     void testInertiaNonExistentEmail() throws Exception {
-        var dto = new RegistrationRequestDTO();
+        var dto = createValidDto();
         dto.setEmail("test@goopmal.com");
-        dto.setPassword("test_pass_123");
-        dto.setFirstName("firstName");
-        dto.setLastName("lastName");
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -367,17 +306,13 @@ public class RegistrationControllerTest {
                 .andExpect(status().isSeeOther())
                 .andExpect(header().string("Location", "/users/sign_up"))
                 .andExpect(flash().attributeExists("errors"))
-                .andExpect(flash().attribute("errors", hasKey("email")))
-                .andReturn();
+                .andExpect(flash().attribute("errors", hasKey("email")));
     }
 
     @Test
     void testInertiaDisposableEmail() throws Exception {
-        var dto = new RegistrationRequestDTO();
+        var dto = createValidDto();
         dto.setEmail("test@sharklasers.com");
-        dto.setPassword("test_password123");
-        dto.setFirstName("firstName");
-        dto.setLastName("lastName");
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -387,17 +322,12 @@ public class RegistrationControllerTest {
                 .andExpect(status().isSeeOther())
                 .andExpect(header().string("Location", "/users/sign_up"))
                 .andExpect(flash().attributeExists("errors"))
-                .andExpect(flash().attribute("errors", hasKey("email")))
-                .andReturn();
+                .andExpect(flash().attribute("errors", hasKey("email")));
     }
 
     @Test
     void testInertiaRegistrationUserCookies() throws Exception {
-        var dto = new RegistrationRequestDTO();
-        dto.setEmail("test@gmail.com");
-        dto.setPassword("test_password");
-        dto.setFirstName("firstName");
-        dto.setLastName("lastName");
+        var dto = createValidDto();
 
         mockMvc.perform(post("/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -406,10 +336,19 @@ public class RegistrationControllerTest {
                         .header("Referer", "/users/sign_up"))
                 .andExpect(status().isFound())
                 .andExpect(header().string("Location", "/dashboard"))
-                .andExpect(flash().attributeCount(0))
+                .andExpect(flash().attributeCount(0))   // успех — без flash
                 .andExpect(header().stringValues(HttpHeaders.SET_COOKIE,
                         Matchers.hasItem(Matchers.containsString("access_token"))))
                 .andExpect(header().stringValues(HttpHeaders.SET_COOKIE,
                         Matchers.hasItem(Matchers.containsString("refresh_token"))));
+    }
+
+    private RegistrationRequestDTO createValidDto() {
+        var dto = new RegistrationRequestDTO();
+        dto.setEmail("test@gmail.com");
+        dto.setPassword("test_password123");
+        dto.setFirstName("firstName");
+        dto.setLastName("lastName");
+        return dto;
     }
 }

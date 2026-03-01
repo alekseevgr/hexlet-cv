@@ -10,11 +10,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
-import java.util.Locale;
 import java.util.Map;
 import lombok.AllArgsConstructor;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -36,8 +33,6 @@ public class LoginController {
 
     private final TokenCookieService tokenCookieService;
 
-    private MessageSource messageSource;
-
     @GetMapping("/users/sign_in")
     public ResponseEntity<?> signInForm(HttpServletRequest request) {
 
@@ -51,16 +46,11 @@ public class LoginController {
                                    HttpServletResponse response,
                                    HttpSession session) {
 
-
-
-
         loginService.login(loginDTO);
         var tokens = tokenService.authenticateAndGenerate(
                 loginDTO.getEmail(),
                 loginDTO.getPassword()
         );
-
-
 
         var access = tokenCookieService.buildAccessCookie(tokens.access());
         var refresh = tokenCookieService.buildRefreshCookie(tokens.refresh());
@@ -68,18 +58,7 @@ public class LoginController {
         response.addHeader(HttpHeaders.SET_COOKIE, access.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refresh.toString());
 
-        //   return ResponseEntity.status(HttpStatus.SEE_OTHER)
-        //          .header(HttpHeaders.LOCATION, "/" + locale + "/dashboard")
-        //         .build();
-
-        Locale loc = LocaleContextHolder.getLocale();
-        String successMessage = messageSource.getMessage(
-                "login.success",
-                null,
-                loc
-        );
-
-        session.setAttribute("flash", Map.of("success", successMessage));
+        session.setAttribute("flash", Map.of("success", true));
 
         return inertia.redirect("/dashboard");
 

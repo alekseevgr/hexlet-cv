@@ -5,11 +5,8 @@ import io.hexlet.cv.handler.exception.UserNotFoundException;
 import io.hexlet.cv.service.FlashPropsService;
 import io.hexlet.cv.service.UserPageSercive;
 import jakarta.servlet.http.HttpServletRequest;
-import java.util.Locale;
 import java.util.Map;
 import lombok.AllArgsConstructor;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -23,8 +20,6 @@ public class UserPageController {
     private final Inertia inertia;
     private final FlashPropsService flashPropsService;
     private final UserPageSercive userPageService;
-
-    private final MessageSource messageSource;
 
     @GetMapping("/users/{user_id}")
     public ResponseEntity<?> userPage(
@@ -41,16 +36,7 @@ public class UserPageController {
 
         } catch (UserNotFoundException ex) {
             Map<String, Object> errorProps = flashPropsService.buildProps(request);
-
-            Locale loc = LocaleContextHolder.getLocale();
-
             errorProps.put("status", 404);
-            errorProps.put("message", messageSource.getMessage("user.notFound", null, loc));
-            errorProps.put("description", messageSource.getMessage(
-                    "user.notFound.description",
-                    new Object[]{userId},
-                    loc
-            ));
             errorProps.put("userId", userId);
 
             ResponseEntity<?> inertiaResponse = inertia.render("Error/UserNotFound", errorProps);

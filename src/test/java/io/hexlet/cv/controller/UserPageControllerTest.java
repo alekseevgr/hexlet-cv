@@ -88,11 +88,7 @@ class UserPageControllerTest {
                         .header("X-Inertia", "true"))
                 .andExpect(status().isNotFound())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                // проверяем что вернулась ошибка
-                .andExpect(jsonPath("$.props.status").value(404));
-                // проверка сообщения требует локализации
-                //.andExpect(jsonPath("$.props.message").value("Пользователь не найден"))
-                //.andExpect(jsonPath("$.props.description",
-                        //containsString("Пользователь с ID " + nonExistentId)));
+                .andExpect(jsonPath("$.props.status").value(404))
+                .andExpect(jsonPath("$.props.userId").value(nonExistentId));
     }
 }
