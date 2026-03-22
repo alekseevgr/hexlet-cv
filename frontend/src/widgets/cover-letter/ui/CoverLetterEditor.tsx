@@ -1,7 +1,7 @@
 import { Textarea, Button, Stack, Group, Paper } from '@mantine/core'
 import { useForm } from '@mantine/form'
 import { useTranslation } from 'react-i18next'
-import { useCoverLetterContext } from '../lib/useCoverLetterContext'
+import { useCoverLetterContext } from '../context/useCoverLetterContext'
 
 export const CoverLetterEditor = () => {
   const { coverLetterData, setCoverLetterData } = useCoverLetterContext()

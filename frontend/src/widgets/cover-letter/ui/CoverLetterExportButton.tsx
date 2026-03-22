@@ -1,7 +1,7 @@
 import { Button } from '@mantine/core'
-import { useCoverLetterContext } from '../lib/useCoverLetterContext'
-import { downloadCoverLetterJson } from '../lib/downloadCoverLetterJson'
+import { useCoverLetterContext } from '../context/useCoverLetterContext'
 import { useTranslation } from 'react-i18next'
+import { downloadJson } from '@shared/lib/helpers/downloadJson'
 
 export const CoverLetterExportButton = () => {
   const { coverLetterData } = useCoverLetterContext()
@@ -15,7 +15,7 @@ export const CoverLetterExportButton = () => {
       size="md"
       type="button"
       onClick={() =>
-        coverLetterData && downloadCoverLetterJson(coverLetterData)
+        coverLetterData && downloadJson(coverLetterData, 'Cover letter')
       }
     >
       {t('accountPage.coverLetter.download')}

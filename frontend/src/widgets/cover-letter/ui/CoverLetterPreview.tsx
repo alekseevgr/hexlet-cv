@@ -1,6 +1,6 @@
 import { Stack, Paper, Text, Title } from '@mantine/core'
 import { useTranslation } from 'react-i18next'
-import { useCoverLetterContext } from '../lib/useCoverLetterContext'
+import { useCoverLetterContext } from '../context/useCoverLetterContext'
 
 export const CoverLetterPreview = () => {
   const { coverLetterData } = useCoverLetterContext()
