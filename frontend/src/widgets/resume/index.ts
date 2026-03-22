@@ -1,2 +1,5 @@
-export { Resume } from './ui/Resume'
-export { downloadJson } from './ui/downloadJson'
+export { ResumeProvider } from './context/ResumeProvider'
+export { ResumeExportButton } from './ui/ResumeExportButton'
+export { downloadJson } from '../../shared/lib/helpers/downloadJson'
+export { ResumeEditor } from './ui/ResumeEditor'
+export { ResumePreview } from './ui/ResumePreview'
