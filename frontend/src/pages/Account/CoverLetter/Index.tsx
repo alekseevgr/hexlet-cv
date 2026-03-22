@@ -1,36 +1,35 @@
 import type { InertiaPage } from '@shared/types/inertia'
 import { AppLayout } from '../components/AppLayout'
-import { CoverLetter, downloadJson } from '@widgets/coverLetter'
 import { useTranslation } from 'react-i18next'
 import { PageHeader } from '@widgets/page-header'
 import { IconPencil } from '@tabler/icons-react'
-import { Group, Button } from '@mantine/core'
-import { useState } from 'react'
-import type { TCoverLetterData } from '@widgets/coverLetter/types'
+import {
+  CoverLetterProvider,
+  CoverLetterExportButton,
+  CoverLetterEditor,
+  CoverLetterPreview,
+} from '@widgets/cover-letter'
+import { type TCoverLetterData } from '@widgets/cover-letter/types'
+import { SimpleGrid } from '@mantine/core'
+import { usePage } from '@inertiajs/react'
+import type { PageProps } from '@inertiajs/core'
 
 const CoverLetterInfo: InertiaPage = () => {
+  const { props } = usePage<PageProps & { coverLetter: TCoverLetterData }>()
+
   const { t } = useTranslation()
-  const [previewData, setPreviewData] = useState<TCoverLetterData | null>(null)
   return (
-    <>
-      <Group justify="space-between" align="center" mb="md">
-        <PageHeader
-          icon={<IconPencil />}
-          title={t('accountPage.coverLetter.title')}
-        />
-        <Button
-          variant="filled"
-          color="yellow"
-          radius="md"
-          size="md"
-          type="button"
-          onClick={() => previewData && downloadJson(previewData)}
-        >
-          {t('accountPage.coverLetter.download')}
-        </Button>
-      </Group>
-      <CoverLetter onPreview={setPreviewData} previewData={previewData} />
-    </>
+    <CoverLetterProvider initialData={props.coverLetter}>
+      <PageHeader
+        icon={<IconPencil />}
+        title={t('accountPage.coverLetter.title')}
+        actionButton={<CoverLetterExportButton />}
+      />
+      <SimpleGrid cols={2} spacing="lg">
+        <CoverLetterEditor />
+        <CoverLetterPreview />
+      </SimpleGrid>
+    </CoverLetterProvider>
   )
 }
 
