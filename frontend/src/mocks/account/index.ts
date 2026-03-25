@@ -1,8 +1,9 @@
 import { http, delay } from 'msw'
 import { inertiaJson } from '@mocks/inertia'
 import type { MenuItem } from '@shared/types/inertiaSharedData'
-import { purchaseHandlers } from './purchase'
+import { purchaseHandlers } from '@mocks/account/purchase'
 import { progressHandlers, lessonsHandlers } from '@mocks/account/progress'
+import { autoApplyHandlers } from '@mocks/account/autoApply'
 
 export const menu: MenuItem[] = [
   { label: 'Мое обучение', link: '/account/my-progress' },
@@ -12,6 +13,7 @@ export const menu: MenuItem[] = [
   { label: 'Интервью' },
   { label: 'Грейдирование' },
   { label: 'Программы обучения' },
+  { label: 'Автоотклики', link: '/account/autoapply' },
 ]
 
 export const activityCards = {
@@ -62,4 +64,5 @@ export const handlers = [
   ...purchaseHandlers,
   ...progressHandlers,
   ...lessonsHandlers,
+  ...autoApplyHandlers,
 ]
